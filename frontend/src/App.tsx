@@ -1,226 +1,127 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import "./App.css";
 
-type Product = {
-  id: number;
-  name: string;
-  category: string;
-  price: number;
-  image: string;
-  badge?: string;
-};
-
-const products: Product[] = [
-  {
-    id: 1,
-    name: "Smartphone Pro X",
-    category: "Électronique",
-    price: 899000,
-    image:
-      "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=800&q=80",
-    badge: "Nouveau",
-  },
-  {
-    id: 2,
-    name: "Casque Wireless Pro",
-    category: "Audio",
-    price: 249000,
-    image:
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80",
-    badge: "Populaire",
-  },
-  {
-    id: 3,
-    name: "Montre Smart X",
-    category: "Accessoires",
-    price: 329000,
-    image:
-      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: 4,
-    name: "Laptop Ultra",
-    category: "Informatique",
-    price: 2499000,
-    image:
-      "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=800&q=80",
-    badge: "Premium",
-  },
-  {
-    id: 5,
-    name: "Camera Creator",
-    category: "Photo",
-    price: 1299000,
-    image:
-      "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: 6,
-    name: "Gaming Keyboard",
-    category: "Gaming",
-    price: 189000,
-    image:
-      "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=800&q=80",
-  },
-];
-
-const categories = [
-  "Tous",
-  "Électronique",
-  "Audio",
-  "Accessoires",
-  "Informatique",
-  "Photo",
-  "Gaming",
+const products = [
+  { id: 1, name: "Smartphone Pro", price: 899000, category: "Téléphones", icon: "📱" },
+  { id: 2, name: "Écouteurs Air", price: 149000, category: "Audio", icon: "🎧" },
+  { id: 3, name: "Smart Watch X", price: 249000, category: "Accessoires", icon: "⌚" },
+  { id: 4, name: "Laptop Pro", price: 2890000, category: "Ordinateurs", icon: "💻" },
+  { id: 5, name: "Clavier RGB", price: 189000, category: "Gaming", icon: "⌨️" },
+  { id: 6, name: "Souris Gaming", price: 99000, category: "Gaming", icon: "🖱️" },
 ];
 
 function formatPrice(price: number) {
-  return new Intl.NumberFormat("fr-FR").format(price) + " Ar";
+  return price.toLocaleString("fr-FR") + " Ar";
 }
 
 function App() {
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("Tous");
-  const [cartCount, setCartCount] = useState(0);
+  const [cart, setCart] = useState<number[]>([]);
 
-  const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      const matchesSearch = product.name
-        .toLowerCase()
-        .includes(search.toLowerCase());
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(search.toLowerCase())
+  );
 
-      const matchesCategory =
-        category === "Tous" || product.category === category;
-
-      return matchesSearch && matchesCategory;
-    });
-  }, [search, category]);
+  const addToCart = (id: number) => {
+    setCart([...cart, id]);
+  };
 
   return (
     <div className="app">
+
       <header className="header">
-        <div className="header-inner">
-          <div className="logo">
-            <span className="logo-mark">4N</span>
-            <span className="logo-text">SHOP</span>
-          </div>
+        <div className="logo">
+          <span>4N</span> BOUTIQUE
+        </div>
 
-          <nav className="nav">
-            <a href="#home">Accueil</a>
-            <a href="#products">Produits</a>
-            <a href="#categories">Catégories</a>
-            <a href="#about">À propos</a>
-          </nav>
+        <nav>
+          <a href="#home">Accueil</a>
+          <a href="#shop">Boutique</a>
+          <a href="#categories">Catégories</a>
+        </nav>
 
+        <div className="header-actions">
+          <button className="icon-button">♡</button>
           <button className="cart-button">
-            🛒
-            {cartCount > 0 && (
-              <span className="cart-badge">{cartCount}</span>
-            )}
+            🛒 <span>{cart.length}</span>
           </button>
         </div>
       </header>
 
       <main>
+
         <section className="hero" id="home">
           <div className="hero-content">
-            <div className="hero-badge">✦ 4N DEV E-COMMERCE V1</div>
+            <div className="badge">✦ 4N DEV MARKETPLACE</div>
 
             <h1>
-              Votre boutique.
-              <br />
-              <span>Votre univers.</span>
+              Le digital
+              <span> nouvelle génération.</span>
             </h1>
 
             <p>
-              Découvrez une nouvelle expérience shopping moderne,
-              rapide et pensée pour le mobile.
+              Découvrez des produits modernes, technologiques et accessibles
+              sélectionnés par 4N DEV.
             </p>
 
-            <div className="hero-actions">
-              <a href="#products" className="primary-button">
-                Découvrir les produits →
+            <div className="hero-buttons">
+              <a href="#shop" className="primary-button">
+                Découvrir la boutique →
               </a>
-
-              <a href="#categories" className="secondary-button">
-                Explorer
-              </a>
+              <button className="secondary-button">
+                Voir les nouveautés
+              </button>
             </div>
           </div>
 
           <div className="hero-visual">
-            <div className="hero-glow" />
-            <div className="hero-card">
-              <span>COLLECTION</span>
-              <strong>FUTURE</strong>
-              <small>2026</small>
+            <div className="orb">
+              <span>4N</span>
             </div>
           </div>
         </section>
 
-        <section className="search-section">
-          <div className="search-box">
-            <span>🔍</span>
+        <section className="shop" id="shop">
 
-            <input
-              type="text"
-              placeholder="Rechercher un produit..."
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-
-            {search && (
-              <button onClick={() => setSearch("")}>×</button>
-            )}
-          </div>
-        </section>
-
-        <section className="categories-section" id="categories">
-          <span className="section-label">CATÉGORIES</span>
-          <h2>Explorez nos univers</h2>
-
-          <div className="categories">
-            {categories.map((item) => (
-              <button
-                key={item}
-                className={`category-button ${
-                  category === item ? "active" : ""
-                }`}
-                onClick={() => setCategory(item)}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className="products-section" id="products">
           <div className="section-heading">
             <div>
-              <span className="section-label">COLLECTION</span>
-              <h2>Produits sélectionnés</h2>
+              <div className="small-title">NOS PRODUITS</div>
+              <h2>Explorez la boutique</h2>
             </div>
 
-            <span>{filteredProducts.length} produits</span>
+            <div className="search-box">
+              🔎
+              <input
+                type="text"
+                placeholder="Rechercher un produit..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="categories" id="categories">
+            <button className="category active">Tous</button>
+            <button className="category">Téléphones</button>
+            <button className="category">Ordinateurs</button>
+            <button className="category">Audio</button>
+            <button className="category">Gaming</button>
+            <button className="category">Accessoires</button>
           </div>
 
           <div className="product-grid">
             {filteredProducts.map((product) => (
               <article className="product-card" key={product.id}>
-                <div className="product-image">
-                  <img src={product.image} alt={product.name} />
 
-                  {product.badge && (
-                    <span className="product-badge">
-                      {product.badge}
-                    </span>
-                  )}
+                <div className="product-image">
+                  <span>{product.icon}</span>
+                  <button className="favorite">♡</button>
                 </div>
 
                 <div className="product-info">
-                  <span className="product-category">
+                  <div className="product-category">
                     {product.category}
-                  </span>
+                  </div>
 
                   <h3>{product.name}</h3>
 
@@ -229,53 +130,38 @@ function App() {
 
                     <button
                       className="add-button"
-                      onClick={() =>
-                        setCartCount((count) => count + 1)
-                      }
+                      onClick={() => addToCart(product.id)}
                     >
                       +
                     </button>
                   </div>
                 </div>
+
               </article>
             ))}
           </div>
+
         </section>
 
-        <section className="features-section">
-          <div className="feature">
-            <strong>⚡ Rapide</strong>
-            <p>Une expérience simple et rapide.</p>
+        <section className="promo">
+          <div>
+            <div className="small-title">4N DEV</div>
+            <h2>La technologie à votre portée.</h2>
+            <p>
+              Une expérience e-commerce pensée pour Madagascar.
+            </p>
           </div>
 
-          <div className="feature">
-            <strong>🔒 Sécurisé</strong>
-            <p>Vos données sont protégées.</p>
-          </div>
-
-          <div className="feature">
-            <strong>📱 Mobile First</strong>
-            <p>Optimisé pour le téléphone.</p>
-          </div>
+          <div className="promo-icon">✦</div>
         </section>
 
-        <section className="about-section" id="about">
-          <span className="section-label">4N DEV</span>
-
-          <h2>Une nouvelle génération de commerce digital.</h2>
-
-          <p>
-            Une plateforme moderne conçue pour créer des boutiques
-            professionnelles, rapides et évolutives.
-          </p>
-        </section>
       </main>
 
-      <footer className="footer">
-        <strong>4N SHOP</strong>
-        <p>Une solution e-commerce créée par 4N Dev.</p>
-        <small>© 2026 4N Dev. Tous droits réservés.</small>
+      <footer>
+        <div className="footer-logo">4N DEV</div>
+        <p>© 2026 4N DEV — Nous créons le digital de demain.</p>
       </footer>
+
     </div>
   );
 }
