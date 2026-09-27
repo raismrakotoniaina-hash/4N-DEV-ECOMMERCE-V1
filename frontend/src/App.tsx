@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { products } from "./products";
-import { store } from "./storeConfig";
+import AdminPanel from "./admin/AdminPanel";
+import { useStore } from "./storeContext";
 import "./App.css";
 
 type Cart = Record<number, number>;
@@ -10,6 +10,9 @@ function formatPrice(price: number) {
 }
 
 function App() {
+  if (new URLSearchParams(window.location.search).get("admin") === "1") return <AdminPanel />;
+
+  const { products, store } = useStore();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("Tous");
   const [cart, setCart] = useState<Cart>({});
