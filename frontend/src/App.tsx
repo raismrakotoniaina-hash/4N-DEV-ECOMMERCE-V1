@@ -1,174 +1,183 @@
 import { useState } from "react";
+import { products } from "./products";
+import { store } from "./storeConfig";
 import "./App.css";
 
-const products = [
-  { id: 1, name: "Smartphone Pro", price: 899000, category: "Téléphones", icon: "📱" },
-  { id: 2, name: "Écouteurs Air", price: 149000, category: "Audio", icon: "🎧" },
-  { id: 3, name: "Smart Watch X", price: 249000, category: "Accessoires", icon: "⌚" },
-  { id: 4, name: "Laptop Pro", price: 2890000, category: "Ordinateurs", icon: "💻" },
-  { id: 5, name: "Clavier RGB", price: 189000, category: "Gaming", icon: "⌨️" },
-  { id: 6, name: "Souris Gaming", price: 99000, category: "Gaming", icon: "🖱️" },
-];
+type Cart = Record<number, number>;
 
 function formatPrice(price: number) {
-  return price.toLocaleString("fr-FR") + " Ar";
+  return price.toLocaleString(store.locale) + " " + store.currency;
 }
 
 function App() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("Tous");
-  const [cart, setCart] = useState<number[]>([]);
+  const [cart, setCart] = useState<Cart>({});
+  const [cartOpen, setCartOpen] = useState(false);
+  const [favorites, setFavorites] = useState<number[]>([]);
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
 
+  const categories = ["Tous", ...new Set(products.map((product) => product.category))];
   const filteredProducts = products.filter((product) =>
     (category === "Tous" || product.category === category) &&
-    product.name.toLowerCase().includes(search.toLowerCase())
+    (!favoritesOnly || favorites.includes(product.id)) &&
+    (product.name + " " + product.category).toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())
   );
+  const cartItems = products.filter((product) => (cart[product.id] || 0) > 0);
+  const cartCount = cartItems.reduce((sum, product) => sum + cart[product.id], 0);
+  const cartTotal = cartItems.reduce((sum, product) => sum + product.price * cart[product.id], 0);
 
-  const addToCart = (id: number) => {
-    setCart([...cart, id]);
+  const changeQuantity = (id: number, delta: number) => {
+    setCart((current) => {
+      const next = { ...current };
+      const quantity = (next[id] || 0) + delta;
+      if (quantity <= 0) delete next[id];
+      else next[id] = quantity;
+      return next;
+    });
   };
+
+  const toggleFavorite = (id: number) => {
+    setFavorites((current) =>
+      current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
+    );
+  };
+
+  const showNew = () => {
+    setSearch("");
+    setCategory("Tous");
+    setFavoritesOnly(false);
+    document.getElementById("shop")?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const orderText = [
+    "Bonjour, je souhaite commander :",
+    ...cartItems.map((product) =>
+      "- " + product.name + " x" + cart[product.id] + " : " +
+      formatPrice(product.price * cart[product.id])
+    ),
+    "Total : " + formatPrice(cartTotal),
+  ].join("\n");
+  const whatsapp = store.whatsappNumber.replace(/\D/g, "");
 
   return (
     <div className="app">
-
       <header className="header">
-        <div className="logo">
-          <span>4N</span> BOUTIQUE
-        </div>
-
-        <nav>
+        <a href="#home" className="logo"><span>{store.logoAccent}</span> {store.name.replace(store.logoAccent, "").trim()}</a>
+        <nav aria-label="Navigation principale">
           <a href="#home">Accueil</a>
           <a href="#shop">Boutique</a>
           <a href="#categories">Catégories</a>
         </nav>
-
         <div className="header-actions">
-          <button className="icon-button">♡</button>
-          <button className="cart-button">
-            🛒 <span>{cart.length}</span>
+          <button className={`icon-button ${favoritesOnly ? "selected" : ""}`}
+            aria-label="Afficher les favoris" aria-pressed={favoritesOnly}
+            onClick={() => { setFavoritesOnly((value) => !value); document.getElementById("shop")?.scrollIntoView({ behavior: "smooth" }); }}>
+            ♥ <span className="action-count">{favorites.length}</span>
           </button>
+          <button className="cart-button" aria-label={`Ouvrir le panier, ${cartCount} articles`}
+            onClick={() => setCartOpen(true)}>🛒 <span>{cartCount}</span></button>
         </div>
       </header>
 
       <main>
-
         <section className="hero" id="home">
           <div className="hero-content">
-            <div className="badge">✦ 4N DEV MARKETPLACE</div>
-
-            <h1>
-              Le digital
-              <span> nouvelle génération.</span>
-            </h1>
-
-            <p>
-              Découvrez des produits modernes, technologiques et accessibles
-              sélectionnés par 4N DEV.
-            </p>
-
+            <div className="badge">{store.heroEyebrow}</div>
+            <h1>{store.heroTitle}<span> {store.heroHighlight}</span></h1>
+            <p>{store.heroDescription}</p>
             <div className="hero-buttons">
-              <a href="#shop" className="primary-button">
-                Découvrir la boutique →
-              </a>
-              <button className="secondary-button">
-                Voir les nouveautés
-              </button>
+              <a href="#shop" className="primary-button">Découvrir la boutique →</a>
+              <button className="secondary-button" onClick={showNew}>Voir les nouveautés</button>
             </div>
           </div>
-
-          <div className="hero-visual">
-            <div className="orb">
-              <span>4N</span>
-            </div>
-          </div>
+          <div className="hero-visual"><div className="orb"><span>{store.logoAccent}</span></div></div>
         </section>
 
         <section className="shop" id="shop">
-
           <div className="section-heading">
-            <div>
-              <div className="small-title">NOS PRODUITS</div>
-              <h2>Explorez la boutique</h2>
-            </div>
-
-            <div className="search-box">
-              🔎
-              <input
-                type="text"
-                placeholder="Rechercher un produit..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+            <div><div className="small-title">NOS PRODUITS</div><h2>Explorez la boutique</h2></div>
+            <div className="search-box">🔎
+              <input type="search" aria-label="Rechercher un produit" placeholder="Rechercher un produit..."
+                value={search} onChange={(event) => setSearch(event.target.value)} />
             </div>
           </div>
-
           <div className="categories" id="categories">
-            {["Tous", "Téléphones", "Ordinateurs", "Audio", "Gaming", "Accessoires"].map((item) => (
-              <button
-                key={item}
-                type="button"
+            {categories.map((item) => (
+              <button key={item} type="button"
                 className={`category ${category === item ? "active" : ""}`}
-                onClick={() => setCategory(item)}
-                aria-pressed={category === item}
-              >
-                {item}
-              </button>
+                onClick={() => setCategory(item)} aria-pressed={category === item}>{item}</button>
             ))}
           </div>
-
+          {favoritesOnly && <p className="filter-notice">Favoris uniquement <button onClick={() => setFavoritesOnly(false)}>Tout afficher</button></p>}
           <div className="product-grid">
             {filteredProducts.map((product) => (
               <article className="product-card" key={product.id}>
-
                 <div className="product-image">
-                  <span>{product.icon}</span>
-                  <button className="favorite">♡</button>
+                  {product.image
+                    ? <img src={product.image} alt={product.name} loading="lazy" />
+                    : <span role="img" aria-label={product.name}>{product.icon}</span>}
+                  <button className={`favorite ${favorites.includes(product.id) ? "selected" : ""}`}
+                    aria-label={favorites.includes(product.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
+                    aria-pressed={favorites.includes(product.id)}
+                    onClick={() => toggleFavorite(product.id)}>{favorites.includes(product.id) ? "♥" : "♡"}</button>
                 </div>
-
                 <div className="product-info">
-                  <div className="product-category">
-                    {product.category}
-                  </div>
-
+                  <div className="product-category">{product.category}</div>
                   <h3>{product.name}</h3>
-
                   <div className="product-bottom">
                     <strong>{formatPrice(product.price)}</strong>
-
-                    <button
-                      className="add-button"
-                      onClick={() => addToCart(product.id)}
-                    >
-                      +
-                    </button>
+                    <button className="add-button" aria-label={`Ajouter ${product.name} au panier`}
+                      onClick={() => changeQuantity(product.id, 1)}>+</button>
                   </div>
                 </div>
-
               </article>
             ))}
           </div>
-
+          {filteredProducts.length === 0 && <div className="empty-state">Aucun produit trouvé. Essayez une autre recherche ou catégorie.</div>}
         </section>
 
         <section className="promo">
-          <div>
-            <div className="small-title">4N DEV</div>
-            <h2>La technologie à votre portée.</h2>
-            <p>
-              Une expérience e-commerce pensée pour Madagascar.
-            </p>
-          </div>
-
+          <div><div className="small-title">{store.logoAccent} DEV</div>
+            <h2>{store.promoTitle}</h2><p>{store.promoDescription}</p></div>
           <div className="promo-icon">✦</div>
         </section>
-
       </main>
 
-      <footer>
-        <div className="footer-logo">4N DEV</div>
-        <p>© 2026 4N DEV — Nous créons le digital de demain.</p>
-      </footer>
+      <footer><div className="footer-logo">{store.name}</div><p>{store.footer}</p></footer>
 
+      {cartOpen && (
+        <div className="cart-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget) setCartOpen(false); }}>
+          <aside className="cart-panel" role="dialog" aria-modal="true" aria-label="Votre panier">
+            <div className="cart-heading"><h2>Votre panier ({cartCount})</h2>
+              <button className="cart-close" aria-label="Fermer le panier" onClick={() => setCartOpen(false)}>✕</button></div>
+            {cartItems.length === 0
+              ? <div className="empty-state">Votre panier est vide.</div>
+              : <div className="cart-lines">{cartItems.map((product) => (
+                <div className="cart-line" key={product.id}>
+                  <span className="cart-item-icon">{product.icon}</span>
+                  <div className="cart-item-info"><strong>{product.name}</strong>
+                    <span>{formatPrice(product.price)}</span>
+                    <div className="quantity-controls">
+                      <button aria-label={`Diminuer ${product.name}`} onClick={() => changeQuantity(product.id, -1)}>−</button>
+                      <span>{cart[product.id]}</span>
+                      <button aria-label={`Augmenter ${product.name}`} onClick={() => changeQuantity(product.id, 1)}>+</button>
+                      <button className="remove-item" onClick={() => changeQuantity(product.id, -cart[product.id])}>Retirer</button>
+                    </div>
+                  </div>
+                </div>
+              ))}</div>}
+            <div className="cart-summary">
+              <div className="cart-total"><span>Total</span><strong>{formatPrice(cartTotal)}</strong></div>
+              {whatsapp && cartCount > 0
+                ? <a className="checkout-button" href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(orderText)}`}
+                    target="_blank" rel="noopener noreferrer">Commander sur WhatsApp</a>
+                : <p className="checkout-note">Commande en ligne non activée. Configurez le contact du client avant publication.</p>}
+              <button className="continue-button" onClick={() => setCartOpen(false)}>Continuer mes achats</button>
+            </div>
+          </aside>
+        </div>
+      )}
     </div>
   );
 }
