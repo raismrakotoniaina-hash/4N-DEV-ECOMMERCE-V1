@@ -16,9 +16,11 @@ function formatPrice(price: number) {
 
 function App() {
   const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("Tous");
   const [cart, setCart] = useState<number[]>([]);
 
   const filteredProducts = products.filter((product) =>
+    (category === "Tous" || product.category === category) &&
     product.name.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -101,12 +103,17 @@ function App() {
           </div>
 
           <div className="categories" id="categories">
-            <button className="category active">Tous</button>
-            <button className="category">Téléphones</button>
-            <button className="category">Ordinateurs</button>
-            <button className="category">Audio</button>
-            <button className="category">Gaming</button>
-            <button className="category">Accessoires</button>
+            {["Tous", "Téléphones", "Ordinateurs", "Audio", "Gaming", "Accessoires"].map((item) => (
+              <button
+                key={item}
+                type="button"
+                className={`category ${category === item ? "active" : ""}`}
+                onClick={() => setCategory(item)}
+                aria-pressed={category === item}
+              >
+                {item}
+              </button>
+            ))}
           </div>
 
           <div className="product-grid">
