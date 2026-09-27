@@ -16,11 +16,13 @@ function App() {
   const [cartOpen, setCartOpen] = useState(false);
   const [favorites, setFavorites] = useState<number[]>([]);
   const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [featuredOnly, setFeaturedOnly] = useState(false);
 
   const categories = ["Tous", ...new Set(products.map((product) => product.category))];
   const filteredProducts = products.filter((product) =>
     (category === "Tous" || product.category === category) &&
     (!favoritesOnly || favorites.includes(product.id)) &&
+    (!featuredOnly || product.featured) &&
     (product.name + " " + product.category).toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())
   );
   const cartItems = products.filter((product) => (cart[product.id] || 0) > 0);
@@ -47,6 +49,7 @@ function App() {
     setSearch("");
     setCategory("Tous");
     setFavoritesOnly(false);
+    setFeaturedOnly(true);
     document.getElementById("shop")?.scrollIntoView({ behavior: "smooth" });
   };
 
@@ -106,9 +109,10 @@ function App() {
             {categories.map((item) => (
               <button key={item} type="button"
                 className={`category ${category === item ? "active" : ""}`}
-                onClick={() => setCategory(item)} aria-pressed={category === item}>{item}</button>
+                onClick={() => { setCategory(item); setFeaturedOnly(false); }} aria-pressed={category === item}>{item}</button>
             ))}
           </div>
+          {featuredOnly && <p className="filter-notice">Nouveautés <button onClick={() => setFeaturedOnly(false)}>Tout afficher</button></p>}
           {favoritesOnly && <p className="filter-notice">Favoris uniquement <button onClick={() => setFavoritesOnly(false)}>Tout afficher</button></p>}
           <div className="product-grid">
             {filteredProducts.map((product) => (
